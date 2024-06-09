@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!--
+Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+Click nbfs://nbhost/SystemFileSystem/Templates/Other/html.html to edit this template
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Stream</title>
+        <style>
+        #wrapper{
+            background-color: black;
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id = "wrapper">
+        <img id="videoFrame" />
+    </div>
+    <script>
+        const img = document.getElementById("videoFrame");
+        function connect() {
+            const ws = new WebSocket("ws://localhost:8080/live/video");
+            ws.binaryType = "arraybuffer";
+            ws.onmessage = function(event) {
+                const arrayBuffer = event.data;
+                console.log(arrayBuffer)
+                const blob = new Blob([arrayBuffer], {type: "image/jpeg"});
+                img.src = URL.createObjectURL(blob);
+            };
+
+            ws.onclose = function() {
+                console.log("WebSocket connection closed, retrying in 1 second...");
+                setTimeout(connect, 1000); // Retry connection after 1 second
+            };
+
+            ws.onerror = function() {
+                console.log("WebSocket error");
+            };
+        }
+
+        connect();
+    </script>
+</body>
+</html>
+
