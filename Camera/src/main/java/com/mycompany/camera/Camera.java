@@ -30,7 +30,7 @@ public class Camera {
         int serverPort = SERVER_PORT; // replace with your server port
         Camera camera = new Camera(serverIp, serverPort);
         FFmpegLogCallback.set();
-        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(0);
+        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(CAMERA_DEVICE);
         FFmpegFrameRecorder recorder = null;
 
         try {
