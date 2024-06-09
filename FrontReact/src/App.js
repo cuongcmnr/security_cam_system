@@ -1,78 +1,108 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Make sure to install axios via npm
 
 function App() {
     const [videos, setVideos] = useState([]);
     const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const [src,setSrc] = useState("")
+    const [loginErr, setloginErr] = useState("")
 
-    const hardcodedCredentials = {
-        username: "admin",
-        password: "passw"
-    };
-
-    const handleLogin = () => {
-        if (username === hardcodedCredentials.username && password === hardcodedCredentials.password) {
-            setIsLoggedIn(true);
-        } else {
-            alert("Invalid credentials");
-        }
-    };
     useEffect(() => {
-        // Replace with your actual API endpoint
-        const fetchVideos = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get('http://localhost:8080/video');
-                setVideos(response.data);
-                setLoading(false);
-            } catch (err) {
-                setError(err);
-                setLoading(false);
-            }
-        };
+        const img = document.getElementById("videoFrame");
+        function connect() {
+            const ws = new WebSocket("ws://localhost:8080/live/video");
+            ws.binaryType = "arraybuffer";
+            ws.onmessage = function(event) {
+                setError(false)
+                const arrayBuffer = event.data;
+                console.log(arrayBuffer)
+                const blob = new Blob([arrayBuffer], {type: "image/jpeg"});
+                setSrc( URL.createObjectURL(blob))
+            };
 
-        fetchVideos();
+            ws.onclose = function() {
+                console.log("WebSocket connection closed, retrying in 1 second...");
+                setTimeout(connect, 1000);
+            };
+
+            ws.onerror = function() {
+                setError(true)
+                console.log("WebSocket error");
+            };
+        }
+
+        connect();
     }, [isLoggedIn]);
+    const handleLogin = async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const username = formData.get('username');
+        const password = formData.get('password');
+
+        try {
+            const response = await fetch('http://localhost:8080/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                setError(false)
+                setIsLoggedIn(true);
+            } else {
+                setError(true)
+                setloginErr("Invalid Credential, please try again");
+            }
+        } catch (err) {
+            setError('An error occurred. Please try again.');
+        }}
+
+
+
     if (!isLoggedIn) {
         return (
             <div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "start", margin: "0px 3rem" }}>
-                    <h1>Integrated Security</h1>
+                    <h1>System Camera</h1>
                     <h2>Login</h2>
                 </div>
-                <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
-                <button onClick={handleLogin}>Login</button>
+                {error && <p style={{ color: 'red' }}>{loginErr}</p>}
+                <form onSubmit={handleLogin}>
+                    <input type="text" placeholder="Username" name="username" />
+                    <input type="password" placeholder="Password" name="password" />
+                    <button type='submit'>Login</button>
+                </form>
             </div>
         );
     }
     return (
         <div className="App" style={{ margin: '0', padding: '0', boxSizing: 'border-box' }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "start", margin: "0px 3rem" }}>
-                <h1>Integrated Security</h1>
-
+                <h1>System Camera</h1>
             </div>
             <div style={{ display: "flex", gap: '3rem', margin: "0px 3rem" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: ".25rem", width: '25%', alignItems: "start" }}>
-                    {loading && <p>Loading videos...</p>}
+                    {/* { {loading && <p>Loading videos...</p>} } */}
                     {error && <p>Error fetching videos: {error.message}</p>}
-                    {!loading && !error && videos.map((videoUrl, index) => (
-                        <button 
-                            key={index} 
-                            style={{ width: "100%", display: "flex", justifyContent: "center", borderRadius: '4px', padding: ".5rem", backgroundColor: 'black', color: 'white', fontSize: "1.25rem", cursor: "pointer" }} 
-                            onClick={() => setSelectedVideoIndex(index)}>
-                            Video {index + 1}
-                        </button>
-                    ))}
+                    {!error &&
+                    <div> 
+                        <img id="videoFrame" src = {src}/>
+                        <button onClick= {async () =>{
+                            const response = await fetch('http://localhost:8080/toggleRecording', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },            
+                            });
+                        }
+                    }>RECORD</button>
+                    </div> 
+                    }
                 </div>
-                <div style={{}}>
-                    {videos.length > 0 && <video src={videos[selectedVideoIndex]} controls style={{ width: '100%' }}></video>}
-                </div>
+  
             </div>
         </div>
     );
