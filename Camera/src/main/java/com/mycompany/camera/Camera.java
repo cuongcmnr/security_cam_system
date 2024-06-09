@@ -8,7 +8,11 @@ import org.bytedeco.javacv.FrameGrabber.Exception;
 import org.bytedeco.javacv.FrameRecorder;
 
 public class Camera {
-    private static final String     CAMERA_DEVICE = "0";
+//For linux
+    private static final String     CAMERA_DEVICE = "/dev/video0";
+//    For window
+//    private static final String     CAMERA_DEVICE = "/dev/video0"; 
+
     private String     SERVER_IP;
     private int        SERVER_PORT;
     private static final String     VIDEO_CODEC = "libx264";
@@ -23,8 +27,8 @@ public class Camera {
         this.SERVER_PORT = serverPort;
     }
     public void start() {
-        String serverIp = "192.168.1.1"; // replace with your server IP
-        int serverPort = 1234; // replace with your server port
+        String serverIp = SERVER_IP; // replace with your server IP
+        int serverPort = SERVER_PORT; // replace with your server port
         Camera camera = new Camera(serverIp, serverPort);
         FFmpegLogCallback.set();
         FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(CAMERA_DEVICE);
