@@ -1,5 +1,7 @@
 package com.mycompany.camera;
+
 import javax.swing.*;
+import com.mycompany.camera.Camera;
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
