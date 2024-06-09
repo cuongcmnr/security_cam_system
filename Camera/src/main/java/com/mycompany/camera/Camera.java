@@ -9,10 +9,9 @@ import org.bytedeco.javacv.FrameRecorder;
 
 public class Camera {
 //For linux
-    private static final String     CAMERA_DEVICE = "/dev/video0";
+    private static final String     CAMERA_DEVICE = "video=Intergrated Camera";
 //    For window
 //    private static final String     CAMERA_DEVICE = "/dev/video0"; 
-
     private String     SERVER_IP;
     private int        SERVER_PORT;
     private static final String     VIDEO_CODEC = "libx264";
@@ -31,7 +30,7 @@ public class Camera {
         int serverPort = SERVER_PORT; // replace with your server port
         Camera camera = new Camera(serverIp, serverPort);
         FFmpegLogCallback.set();
-        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(CAMERA_DEVICE);
+        FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(0);
         FFmpegFrameRecorder recorder = null;
 
         try {
